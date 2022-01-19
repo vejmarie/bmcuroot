@@ -4,6 +4,7 @@ then
 \rm -rf go1.14.3.linux-amd64.tar.gz
 wget https://go.dev/dl/go1.14.3.linux-amd64.tar.gz
 gunzip go1.14.3.linux-amd64.tar.gz
+tar xf go1.14.3.linux-amd64.tar
 \rm -Rf ~/go
 mv go $HOME
 go get github.com/u-root/u-root
