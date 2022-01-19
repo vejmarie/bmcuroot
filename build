@@ -10,17 +10,17 @@ tar xf go1.17.6.linux-amd64.tar
 \rm -Rf ~/gobin
 \mkdir $HOME/gobin
 mv go $HOME/gobin
-PATH=$HOME/gobin/go/bin:$PATH
+PATH=$HOME/gobin/go/bin:$HOME/go/bin:$PATH
 \rm -rf gxp-linux gxp-uboot gxp-bootblock
 GOPATH=$HOME/go
-which go
-go get github.com/u-root/u-root
+GO111MODULE=off go get github.com/u-root/u-root
 git clone https://github.com/hewlettpackard/gxp-linux
 git clone https://github.com/hewlettpackard/gxp-uboot
 git clone https://github.com/hewlettpackard/gxp-bootblock
 fi
+PATH=$HOME/gobin/go/bin:$HOME/go/bin:$PATH
 GOPATH=$HOME/go
-GOARCH=arm  u-root github.com/u-root/u-root/cmds/core/{init,ls,ip,dhclient,wget,cat,elvish}
+GO111MODULE=off GOARCH=arm  u-root github.com/u-root/u-root/cmds/core/{init,ls,ip,dhclient,wget,cat,elvish}
 rm /tmp/initramfs.linux_arm.cpio.lzma
 xz --format=lzma /tmp/initramfs.linux_arm.cpio
 cd gxp-linux
@@ -38,6 +38,7 @@ make ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- gxp_defconfig
 make -j32 ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- 
 make -j32 ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- envtools
 cd ..
+\rm -rf fit
 \mkdir fit
 dtc -o fit/gxp.dtb gxp-linux/arch/arm/boot/dts/gxp.dts
 cp im-magic.its fit
