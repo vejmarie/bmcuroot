@@ -1,0 +1,47 @@
+# Build u-root environment
+if [ "r$1" == "rdownload" ]
+then
+\rm -rf go1.14.3.linux-amd64.tar.gz
+wget https://go.dev/dl/go1.14.3.linux-amd64.tar.gz
+gunzip go1.14.3.linux-amd64.tar.gz
+\rm -Rf ~/go
+mv go $HOME
+go get github.com/u-root/u-root
+\rm -rf gxp-linux gxp-uboot gxp-bootblock
+git clone https://github.com/hewlettpackard/gxp-linux
+git clone https://github.com/hewlettpackard/gxp-uboot
+git clone https://github.com/hewlettpackard/gxp-bootblock
+fi
+GOPATH=$HOME/go
+PATH=$HOME/go/bin:$PATH
+go get
+GOARCH=arm  u-root github.com/u-root/u-root/cmds/core/{init,ls,ip,dhclient,wget,cat,elvish}
+rm /tmp/initramfs.linux_arm.cpio.lzma
+xz --format=lzma /tmp/initramfs.linux_arm.cpio
+cd gxp-linux
+make ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- clean
+make ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- gxp_defconfig
+make ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- dtbs
+make -j32 ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi-
+cd ..
+cp fw_env.config ./gxp-uboot/tools/env/fw_env.config
+cp alt_fw_env.config ./gxp-uboot/tools/env
+cd gxp-uboot
+# in u-boot
+make ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- clean
+make ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- gxp_defconfig
+make -j32 ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- 
+make -j32 ARCH=arm -j16 CROSS_COMPILE=arm-linux-gnueabi- envtools
+cd ..
+\mkdir fit
+dtc -o fit/gxp.dtb gxp-linux/arch/arm/boot/dts/gxp.dts
+cp im-magic.its fit
+cp ./gxp-linux/arch/arm/boot/zImage fit
+cp /tmp/initramfs.linux_arm.cpio.lzma fit/initramfs.cpio.lzma
+cd fit
+mkimage -f im-magic.its -r image.fit
+cd ..
+dd if=/dev/zero of=image.bin bs=1k count=32768
+dd bs=1k conv=notrunc seek=0 if=gxp-uboot/u-boot.bin of=image.bin 
+dd bs=1k conv=notrunc seek=31616 if=gxp-bootblock/gxp-bootblock.bin of=image.bin 
+dd bs=1k conv=notrunc seek=512 if=fit/image.fit of=image.bin
