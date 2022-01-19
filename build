@@ -1,21 +1,25 @@
 # Build u-root environment
 if [ "r$1" == "rdownload" ]
 then
-\rm -rf go1.14.3.linux-amd64.tar.gz
-wget https://go.dev/dl/go1.14.3.linux-amd64.tar.gz
-gunzip go1.14.3.linux-amd64.tar.gz
-tar xf go1.14.3.linux-amd64.tar
-\rm -Rf ~/go
-mv go $HOME
-go get github.com/u-root/u-root
+chmod -Rf 777 $HOME/go
+\rm -rf $HOME/go
+\rm -rf go1.17.6.linux-amd64.tar.gz go1.17.6.linux-amd64.tar
+wget https://go.dev/dl/go1.17.6.linux-amd64.tar.gz
+gunzip go1.17.6.linux-amd64.tar.gz
+tar xf go1.17.6.linux-amd64.tar
+\rm -Rf ~/gobin
+\mkdir $HOME/gobin
+mv go $HOME/gobin
+PATH=$HOME/gobin/go/bin:$PATH
 \rm -rf gxp-linux gxp-uboot gxp-bootblock
+GOPATH=$HOME/go
+which go
+go get github.com/u-root/u-root
 git clone https://github.com/hewlettpackard/gxp-linux
 git clone https://github.com/hewlettpackard/gxp-uboot
 git clone https://github.com/hewlettpackard/gxp-bootblock
 fi
 GOPATH=$HOME/go
-PATH=$HOME/go/bin:$PATH
-go get
 GOARCH=arm  u-root github.com/u-root/u-root/cmds/core/{init,ls,ip,dhclient,wget,cat,elvish}
 rm /tmp/initramfs.linux_arm.cpio.lzma
 xz --format=lzma /tmp/initramfs.linux_arm.cpio
